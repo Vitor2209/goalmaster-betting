@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard — GoalMaster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="assets/logo.png" alt="GoalMaster" />
+      <div><h1>GoalMaster</h1><span>Bet. Play. Win.</span></div>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="index.html">Home</a>
+      <a href="matches.html">Matches</a>
+      <a href="leaderboard.html" class="active">Leaderboard</a>
+      <a href="account.html">My Account</a>
+    </div>
+    <div class="navbar-right">
+      <div class="coin-balance"><div class="coin-icon">$</div><span id="coinAmount" class="coin-amount">1,250</span><span style="color:var(--text-muted);font-size:0.75rem">COINS</span></div>
+      <div class="user-avatar" id="userAvatar">P</div>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">🏆 Leaderboard</h1>
+    </div>
+
+    <div class="leaderboard-full" id="leaderboardFull">
+      <div class="loading-spinner"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const lb = await GmAPI.getLeaderboard();
+      const container = document.getElementById('leaderboardFull');
+      if (!container || !lb) return;
+
+      const rankClass = (i) => ['gold','silver','bronze'][i] || 'default';
+
+      container.innerHTML = lb.map((u, i) => `
+        <div class="leaderboard-full-item">
+          <div class="lb-rank ${rankClass(i)}">${i + 1}</div>
+          <div class="lb-avatar">${u.username.charAt(0).toUpperCase()}</div>
+          <div class="lb-info">
+            <div class="lb-name">${u.username}</div>
+            <div class="lb-stats">Active bettor</div>
+          </div>
+          <span class="lb-coins">${u.coins.toLocaleString()} <span style="font-size:0.7rem;color:var(--text-muted)">Coins</span></span>
+        </div>
+      `).join('');
+    });
+  </script>
+</body>
+</html>

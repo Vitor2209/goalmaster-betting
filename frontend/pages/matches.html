@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matches — GoalMaster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="assets/logo.png" alt="GoalMaster" />
+      <div><h1>GoalMaster</h1><span>Bet. Play. Win.</span></div>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="index.html">Home</a>
+      <a href="matches.html" class="active">Matches</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="account.html">My Account</a>
+    </div>
+    <div class="navbar-right">
+      <div class="coin-balance"><div class="coin-icon">$</div><span id="coinAmount" class="coin-amount">1,250</span><span style="color:var(--text-muted);font-size:0.75rem">COINS</span></div>
+      <div class="user-avatar" id="userAvatar">P</div>
+    </div>
+  </nav>
+
+  <div class="main-layout">
+    <div class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">All Matches</h1>
+        <div class="filter-bar" id="filterBar">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="live">🔴 Live</button>
+          <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+        </div>
+      </div>
+      <div class="matches-grid" id="matchesFullGrid">
+        <div class="loading-spinner"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="betslip-panel" id="betslipPanel">
+        <div class="betslip-header"><h3 class="betslip-title">Bet Slip</h3></div>
+        <div class="betslip-content">
+          <div id="betslipEmpty" class="betslip-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <p>Click on odds to add bets</p>
+          </div>
+          <div id="betslipItems"></div>
+          <div id="betslipSummary" style="display:none">
+            <div class="betslip-summary">
+              <input type="number" class="bet-amount-input" id="betAmount" value="100" min="1" />
+              <div class="bet-amount-presets">
+                <button class="preset-btn" data-amount="50">50</button>
+                <button class="preset-btn" data-amount="100">100</button>
+                <button class="preset-btn" data-amount="200">200</button>
+                <button class="preset-btn" data-amount="500">500</button>
+              </div>
+              <div class="betslip-row"><span class="label">Total Odds</span><span class="value" id="totalOdds">0.00</span></div>
+              <div class="betslip-row"><span class="label">Total Bet</span><span class="value" id="totalBet">100 Coins</span></div>
+              <div class="betslip-row"><span class="label">Potential Win</span><span class="value highlight" id="potentialWin">0 Coins</span></div>
+              <button class="btn-place-bet" id="placeBetBtn">⚽ Place Bet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/betslip.js"></script>
+  <script src="js/matches.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await Matches.renderFullPage('all');
+      BetSlip.init();
+
+      document.getElementById('filterBar').addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        Matches.renderFullPage(btn.dataset.filter);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GoalMaster — Bet. Play. Win.</title>
+  <meta name="description" content="GoalMaster is a virtual coin football betting platform. Place bets on your favorite matches and climb the leaderboard." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="assets/logo.png" alt="GoalMaster Logo" />
+      <div>
+        <h1>GoalMaster</h1>
+        <span>Bet. Play. Win.</span>
+      </div>
+    </div>
+
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+
+    <div class="navbar-menu" id="navMenu">
+      <a href="index.html" class="active">Home</a>
+      <a href="matches.html">Matches</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="account.html">My Account</a>
+    </div>
+
+    <div class="navbar-right">
+      <div class="coin-balance">
+        <div class="coin-icon">$</div>
+        <span id="coinAmount" class="coin-amount">1,250</span>
+        <span style="color:var(--text-muted);font-size:0.75rem">COINS</span>
+      </div>
+      <div class="user-avatar" id="userAvatar">P</div>
+    </div>
+  </nav>
+
+  <!-- ===== Main Layout ===== -->
+  <div class="main-layout">
+    <!-- Left: Content -->
+    <div class="main-content">
+
+      <!-- Hero Featured Match -->
+      <div class="hero-banner">
+        <div class="hero-bg"></div>
+        <div class="hero-content" id="heroContent">
+          <!-- Rendered by JS -->
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- Live & Upcoming -->
+      <div class="section-header">
+        <h2 class="section-title"><span class="dot"></span> Live &amp; Upcoming</h2>
+        <a href="matches.html" class="btn-secondary">🏟 Bet Now</a>
+      </div>
+
+      <div class="matches-grid" id="matchesGrid">
+        <div class="loading-spinner"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Right: Sidebar -->
+    <aside class="sidebar">
+      <!-- Bet Slip -->
+      <div class="betslip-panel" id="betslipPanel">
+        <div class="betslip-header">
+          <h3 class="betslip-title">Bet Slip</h3>
+          <div class="betslip-tabs">
+            <button class="betslip-tab active">My Bets</button>
+          </div>
+        </div>
+        <div class="betslip-content">
+          <div id="betslipEmpty" class="betslip-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <p>Click on odds to add bets</p>
+          </div>
+
+          <div id="betslipItems"></div>
+
+          <div id="betslipSummary" style="display:none">
+            <div class="betslip-summary">
+              <input type="number" class="bet-amount-input" id="betAmount" value="100" min="1" placeholder="Bet amount" />
+              <div class="bet-amount-presets">
+                <button class="preset-btn" data-amount="50">50</button>
+                <button class="preset-btn" data-amount="100">100</button>
+                <button class="preset-btn" data-amount="200">200</button>
+                <button class="preset-btn" data-amount="500">500</button>
+              </div>
+              <div class="betslip-row">
+                <span class="label">Total Odds</span>
+                <span class="value" id="totalOdds">0.00</span>
+              </div>
+              <div class="betslip-row">
+                <span class="label">Total Bet</span>
+                <span class="value" id="totalBet">100 Coins</span>
+              </div>
+              <div class="betslip-row">
+                <span class="label">Potential Win</span>
+                <span class="value highlight" id="potentialWin">0 Coins</span>
+              </div>
+              <button class="btn-place-bet" id="placeBetBtn">⚽ Place Bet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaderboard Preview -->
+      <div class="leaderboard-panel" id="leaderboardPanel">
+        <div class="leaderboard-header">
+          <h3 class="leaderboard-title">Leaderboard</h3>
+          <a href="leaderboard.html" class="btn-secondary" style="padding:4px 10px;font-size:0.7rem">View All</a>
+        </div>
+        <div class="leaderboard-list" id="leaderboardList">
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/betslip.js"></script>
+  <script src="js/matches.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await Matches.init();
+      BetSlip.init();
+
+      // Render leaderboard sidebar
+      const lb = await GmAPI.getLeaderboard();
+      const lbList = document.getElementById('leaderboardList');
+      if (lbList && lb) {
+        const rankClass = (i) => ['gold','silver','bronze'][i] || 'default';
+        lbList.innerHTML = lb.slice(0, 4).map((u, i) => `
+          <div class="leaderboard-item">
+            <div class="leaderboard-rank ${rankClass(i)}">${i + 1}</div>
+            <span class="leaderboard-user">${u.username}</span>
+            <span class="leaderboard-coins">${u.coins.toLocaleString()}<span class="leaderboard-coins-label"> Coins</span></span>
+          </div>
+        `).join('');
+      }
+    });
+  </script>
+</body>
+</html>

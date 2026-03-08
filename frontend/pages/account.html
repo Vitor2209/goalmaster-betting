@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Account — GoalMaster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="assets/logo.png" alt="GoalMaster" />
+      <div><h1>GoalMaster</h1><span>Bet. Play. Win.</span></div>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+    <div class="navbar-menu" id="navMenu">
+      <a href="index.html">Home</a>
+      <a href="matches.html">Matches</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="account.html" class="active">My Account</a>
+    </div>
+    <div class="navbar-right">
+      <div class="coin-balance"><div class="coin-icon">$</div><span id="coinAmount" class="coin-amount">1,250</span><span style="color:var(--text-muted);font-size:0.75rem">COINS</span></div>
+      <div class="user-avatar" id="userAvatar">P</div>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <div class="page-header">
+      <h1 class="page-title">My Account</h1>
+    </div>
+
+    <div class="account-grid">
+      <!-- Profile Card -->
+      <div class="account-card">
+        <h3>👤 Profile</h3>
+        <div class="account-profile">
+          <div class="profile-avatar-lg" id="profileAvatar">P</div>
+          <div class="profile-info">
+            <h2 id="profileName">Player1</h2>
+            <p>Member since March 2026</p>
+            <p style="margin-top:8px"><strong id="profileCoins" style="color:var(--accent-yellow)">1,250</strong> <span style="color:var(--text-muted)">Coins</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Card -->
+      <div class="account-card">
+        <h3>📊 Statistics</h3>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="statTotal">47</div>
+            <div class="stat-label">Total Bets</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statWins">22</div>
+            <div class="stat-label">Wins</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statWinRate">47%</div>
+            <div class="stat-label">Win Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Betting History -->
+      <div class="account-card" style="grid-column: 1 / -1">
+        <h3>📋 Betting History</h3>
+        <div class="history-list" id="historyList">
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load user
+      const user = await GmAPI.getUser();
+      if (user) {
+        document.getElementById('profileName').textContent = user.username;
+        document.getElementById('profileAvatar').textContent = user.username.charAt(0).toUpperCase();
+        document.getElementById('profileCoins').textContent = user.coins.toLocaleString();
+        document.getElementById('statTotal').textContent = user.totalBets;
+        document.getElementById('statWins').textContent = user.wins;
+        document.getElementById('statWinRate').textContent = user.winRate + '%';
+      }
+
+      // Load history
+      const history = await GmAPI.getBetHistory();
+      const list = document.getElementById('historyList');
+      if (list && history) {
+        list.innerHTML = history.map(h => `
+          <div class="history-item">
+            <div>
+              <div class="history-match">${h.match}</div>
+              <div class="history-pick">${h.pick} — Odds: ${h.odds.toFixed(2)} — ${h.amount} Coins</div>
+            </div>
+            <span class="history-result ${h.result}">${h.result === 'win' ? `+${h.payout}` : h.result === 'loss' ? `-${h.amount}` : 'Pending'}</span>
+          </div>
+        `).join('');
+      }
+    });
+  </script>
+</body>
+</html>
