@@ -1,188 +1,271 @@
 /**
- * GoalMaster – Bet Slip Module
- * Manages bet selections, amounts, and placement.
+ * GoalMaster - Bet Slip Module
+ * Handles bet slip functionality
  */
 
 const BetSlip = {
+  // Bet slip items
   items: [],
-  amount: 100,
 
-  /** Initialize bet slip */
+  // Default bet amount
+  defaultAmount: 100,
+
+  /**
+   * Initialize bet slip
+   */
   init() {
-    this.loadFromStorage();
-    this.render();
-    this.bindEvents();
-  },
-
-  /** Bind global bet slip events */
-  bindEvents() {
-    // Amount input
-    const amountInput = document.getElementById('betAmount');
-    if (amountInput) {
-      amountInput.addEventListener('input', (e) => {
-        this.amount = parseInt(e.target.value) || 0;
-        this.updateSummary();
-      });
+    // Load from localStorage if available
+    const saved = localStorage.getItem('goalmaster_betslip');
+    if (saved) {
+      this.items = JSON.parse(saved);
     }
+    this.render();
 
-    // Preset buttons
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.amount = parseInt(btn.dataset.amount);
-        const input = document.getElementById('betAmount');
-        if (input) input.value = this.amount;
-        this.updateSummary();
-      });
+    // Listen for bet added events
+    window.addEventListener('betAdded', (e) => {
+      this.addBet(e.detail);
     });
+  },
 
-    // Place bet button
-    const placeBtn = document.getElementById('placeBetBtn');
-    if (placeBtn) {
-      placeBtn.addEventListener('click', () => this.placeBet());
+  /**
+   * Add a bet to the slip
+   */
+  addBet(bet) {
+    // Check if bet already exists
+    const existingIndex = this.items.findIndex(
+      b => b.matchId === bet.matchId && b.type === bet.type
+    );
+
+    if (existingIndex >= 0) {
+      // Remove if clicking same selection
+      this.items.splice(existingIndex, 1);
+      Toast.show('Bet removed from slip', 'warning');
+    } else {
+      // Remove any existing bet for this match (only one selection per match)
+      this.items = this.items.filter(b => b.matchId !== bet.matchId);
+      
+      // Add new bet
+      this.items.push({
+        ...bet,
+        amount: this.defaultAmount
+      });
+      Toast.show('Bet added to slip', 'success');
     }
-  },
 
-  /** Add a bet to the slip */
-  addBet(matchId, matchLabel, pickName, odds) {
-    // Remove existing bet for the same match
-    this.items = this.items.filter(b => b.matchId !== matchId);
-
-    this.items.push({ matchId, matchLabel, pickName, odds });
-    this.saveToStorage();
+    this.save();
     this.render();
-    Toast.show(`Added: ${pickName}`, 'success');
+    this.updateMatchCardSelections();
   },
 
-  /** Remove a bet from the slip */
+  /**
+   * Remove a bet from the slip
+   */
   removeBet(matchId) {
     this.items = this.items.filter(b => b.matchId !== matchId);
-    this.saveToStorage();
+    this.save();
     this.render();
-    // Deselect the odd buttons for that match
-    document.querySelectorAll(`.match-odd-btn[data-match="${matchId}"], .odd-btn[data-match="${matchId}"]`).forEach(btn => {
+    this.updateMatchCardSelections();
+    Toast.show('Bet removed', 'warning');
+  },
+
+  /**
+   * Clear all bets
+   */
+  clearAll() {
+    this.items = [];
+    this.save();
+    this.render();
+    this.updateMatchCardSelections();
+  },
+
+  /**
+   * Update bet amount
+   */
+  updateAmount(matchId, amount) {
+    const bet = this.items.find(b => b.matchId === matchId);
+    if (bet) {
+      bet.amount = Math.max(0, parseInt(amount) || 0);
+      this.save();
+      this.render();
+    }
+  },
+
+  /**
+   * Calculate total stake
+   */
+  getTotalStake() {
+    return this.items.reduce((sum, bet) => sum + bet.amount, 0);
+  },
+
+  /**
+   * Calculate potential winnings
+   */
+  getPotentialWinnings() {
+    return this.items.reduce((sum, bet) => sum + (bet.amount * bet.odds), 0);
+  },
+
+  /**
+   * Save to localStorage
+   */
+  save() {
+    localStorage.setItem('goalmaster_betslip', JSON.stringify(this.items));
+  },
+
+  /**
+   * Place all bets
+   */
+  async placeBets() {
+    if (this.items.length === 0) {
+      Toast.show('No bets to place', 'error');
+      return;
+    }
+
+    if (!Auth.isLoggedIn()) {
+      Toast.show('Please login to place bets', 'error');
+      window.location.href = '/login.html';
+      return;
+    }
+
+    const user = Auth.getCurrentUser();
+    const totalStake = this.getTotalStake();
+
+    if (user.balance < totalStake) {
+      Toast.show('Insufficient coins', 'error');
+      return;
+    }
+
+    try {
+      // Place each bet
+      for (const bet of this.items) {
+        await API.placeBet({
+          matchId: bet.matchId,
+          matchName: bet.matchName,
+          selection: bet.selection,
+          type: bet.type,
+          odds: bet.odds,
+          amount: bet.amount
+        });
+      }
+
+      Toast.show(`Bets placed successfully! -${totalStake} coins`, 'success');
+      this.clearAll();
+      
+      // Refresh UI
+      Auth.updateHeaderUI();
+    } catch (error) {
+      Toast.show(error.message || 'Failed to place bets', 'error');
+    }
+  },
+
+  /**
+   * Update match card selections to reflect bet slip state
+   */
+  updateMatchCardSelections() {
+    // Clear all selections first
+    document.querySelectorAll('.odds-btn.selected, .match-odd-btn.selected').forEach(btn => {
       btn.classList.remove('selected');
+    });
+
+    // Add selected class to buttons in bet slip
+    this.items.forEach(bet => {
+      const selector = `[data-match-id="${bet.matchId}"][data-bet-type="${bet.type}"]`;
+      const btn = document.querySelector(selector);
+      if (btn) {
+        btn.classList.add('selected');
+      }
     });
   },
 
-  /** Calculate total odds */
-  getTotalOdds() {
-    if (this.items.length === 0) return 0;
-    return this.items.reduce((acc, b) => acc * b.odds, 1);
+  /**
+   * Check if a bet is in the slip
+   */
+  hasBet(matchId, type) {
+    return this.items.some(b => b.matchId === matchId && b.type === type);
   },
 
-  /** Calculate potential win */
-  getPotentialWin() {
-    return (this.amount * this.getTotalOdds()).toFixed(0);
-  },
-
-  /** Place the bet via API */
-  async placeBet() {
-    if (this.items.length === 0) {
-      Toast.show('Add a bet first!', 'error');
-      return;
-    }
-    if (this.amount <= 0) {
-      Toast.show('Enter a valid amount!', 'error');
-      return;
-    }
-
-    const betData = {
-      selections: this.items.map(b => ({
-        matchId: b.matchId,
-        pick: b.pickName,
-        odds: b.odds,
-      })),
-      amount: this.amount,
-      potentialWin: parseFloat(this.getPotentialWin()),
-    };
-
-    try {
-      const result = await GmAPI.placeBet(betData);
-      Toast.show('Bet placed successfully! 🎉', 'success');
-      this.items = [];
-      this.saveToStorage();
-      this.render();
-
-      // Update coin balance (mock)
-      const user = await GmAPI.getUser();
-      const coinEl = document.getElementById('coinAmount');
-      if (coinEl && user) {
-        const newBalance = user.coins - this.amount;
-        coinEl.textContent = newBalance > 0 ? newBalance.toLocaleString() : user.coins.toLocaleString();
-      }
-
-      // Deselect all odd buttons
-      document.querySelectorAll('.match-odd-btn.selected, .odd-btn.selected').forEach(btn => {
-        btn.classList.remove('selected');
-      });
-    } catch (err) {
-      Toast.show('Failed to place bet.', 'error');
-    }
-  },
-
-  /** Render the bet slip UI */
+  /**
+   * Render bet slip UI
+   */
   render() {
-    const container = document.getElementById('betslipItems');
-    const summary = document.getElementById('betslipSummary');
-    const emptyState = document.getElementById('betslipEmpty');
-
+    const container = document.querySelector('[data-testid="betslip-content"]');
     if (!container) return;
 
     if (this.items.length === 0) {
-      container.innerHTML = '';
-      if (summary) summary.style.display = 'none';
-      if (emptyState) emptyState.style.display = 'block';
+      container.innerHTML = `
+        <div class="betslip-empty" data-testid="betslip-empty">
+          <div class="betslip-empty-icon">🎫</div>
+          <p>Your bet slip is empty</p>
+          <p class="text-muted" style="font-size: 0.875rem; margin-top: 8px;">
+            Click on odds to add selections
+          </p>
+        </div>
+      `;
       return;
     }
 
-    if (emptyState) emptyState.style.display = 'none';
-    if (summary) summary.style.display = 'block';
+    const user = Auth.getCurrentUser();
+    const totalStake = this.getTotalStake();
+    const potentialWin = this.getPotentialWinnings();
+    const hasEnoughCoins = user && user.balance >= totalStake;
 
-    container.innerHTML = this.items.map(bet => `
-      <div class="betslip-item" data-match="${bet.matchId}">
-        <div class="betslip-item-header">
-          <span class="betslip-item-match">${bet.matchLabel}</span>
-          <button class="betslip-item-remove" data-match="${bet.matchId}" title="Remove">✕</button>
+    let html = `
+      <div class="betslip-bets" data-testid="betslip-bets">
+        ${this.items.map(bet => `
+          <div class="betslip-item" data-testid="betslip-item-${bet.matchId}">
+            <div class="betslip-item-header">
+              <div>
+                <div class="betslip-item-match">${bet.matchName}</div>
+                <div class="betslip-item-selection">${bet.selection}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="betslip-item-odds">${bet.odds.toFixed(2)}</span>
+                <button class="betslip-remove" data-testid="remove-bet-${bet.matchId}" onclick="BetSlip.removeBet('${bet.matchId}')">✕</button>
+              </div>
+            </div>
+            <div class="betslip-amount-section">
+              <label class="betslip-label">Bet Amount</label>
+              <div class="betslip-amount-input">
+                <input 
+                  type="number" 
+                  value="${bet.amount}" 
+                  min="0"
+                  data-testid="bet-amount-${bet.matchId}"
+                  onchange="BetSlip.updateAmount('${bet.matchId}', this.value)"
+                  oninput="BetSlip.updateAmount('${bet.matchId}', this.value)"
+                >
+                <span>coins</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="betslip-summary" data-testid="betslip-summary">
+        <div class="betslip-summary-row">
+          <span class="betslip-summary-label">Total Stake</span>
+          <span class="betslip-summary-value">${totalStake.toLocaleString()} coins</span>
         </div>
-        <div class="betslip-item-pick">
-          <span class="pick-name">${bet.pickName}</span>
-          <span class="pick-odd">${bet.odds.toFixed(2)}</span>
+        <div class="betslip-summary-row">
+          <span class="betslip-summary-label">Potential Win</span>
+          <span class="betslip-summary-value highlight">${potentialWin.toFixed(0).toLocaleString()} coins</span>
         </div>
       </div>
-    `).join('');
 
-    // Bind remove buttons
-    container.querySelectorAll('.betslip-item-remove').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.removeBet(parseInt(btn.dataset.match));
-      });
-    });
+      <button 
+        class="betslip-submit" 
+        data-testid="place-bet-btn"
+        onclick="BetSlip.placeBets()"
+        ${!hasEnoughCoins ? 'disabled' : ''}
+      >
+        ${!user ? 'Login to Place Bet' : !hasEnoughCoins ? 'Insufficient Coins' : 'Place Bet'}
+      </button>
+    `;
 
-    this.updateSummary();
-  },
-
-  /** Update the summary section */
-  updateSummary() {
-    const totalOddsEl = document.getElementById('totalOdds');
-    const potentialWinEl = document.getElementById('potentialWin');
-    const totalBetEl = document.getElementById('totalBet');
-
-    if (totalOddsEl) totalOddsEl.textContent = this.getTotalOdds().toFixed(2);
-    if (potentialWinEl) potentialWinEl.textContent = `${this.getPotentialWin()} Coins`;
-    if (totalBetEl) totalBetEl.textContent = `${this.amount} Coins`;
-  },
-
-  /** Persist to localStorage */
-  saveToStorage() {
-    localStorage.setItem('gm_betslip', JSON.stringify(this.items));
-  },
-
-  /** Load from localStorage */
-  loadFromStorage() {
-    try {
-      const saved = JSON.parse(localStorage.getItem('gm_betslip'));
-      if (Array.isArray(saved)) this.items = saved;
-    } catch (e) { /* ignore */ }
-  },
+    container.innerHTML = html;
+  }
 };
+
+// Make BetSlip available globally
+window.BetSlip = BetSlip;
+
 

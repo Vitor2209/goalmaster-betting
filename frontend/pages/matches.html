@@ -1,96 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Matches — GoalMaster</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GoalMaster - All Matches">
+  <title>Matches - GoalMaster</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@400;500;600&family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="../css/styles.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 </head>
 <body>
-
-  <nav class="navbar">
-    <div class="navbar-brand">
-      <img src="assets/logo.png" alt="GoalMaster" />
-      <div><h1>GoalMaster</h1><span>Bet. Play. Win.</span></div>
-    </div>
-    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
-    <div class="navbar-menu" id="navMenu">
-      <a href="index.html">Home</a>
-      <a href="matches.html" class="active">Matches</a>
-      <a href="leaderboard.html">Leaderboard</a>
-      <a href="account.html">My Account</a>
-    </div>
-    <div class="navbar-right">
-      <div class="coin-balance"><div class="coin-icon">$</div><span id="coinAmount" class="coin-amount">1,250</span><span style="color:var(--text-muted);font-size:0.75rem">COINS</span></div>
-      <div class="user-avatar" id="userAvatar">P</div>
-    </div>
-  </nav>
-
-  <div class="main-layout">
-    <div class="main-content">
-      <div class="page-header">
-        <h1 class="page-title">All Matches</h1>
-        <div class="filter-bar" id="filterBar">
-          <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="live">🔴 Live</button>
-          <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+  <!-- Header -->
+  <header class="header" data-testid="header">
+    <div class="header-container">
+      <a href="../index.html" class="logo" data-testid="logo">
+        <div class="logo-icon">⚽</div>
+        <div>
+          <div class="logo-text">GoalMaster</div>
+          <div class="logo-tagline">Bet. Play. Win.</div>
         </div>
-      </div>
-      <div class="matches-grid" id="matchesFullGrid">
-        <div class="loading-spinner"><div class="spinner"></div></div>
-      </div>
-    </div>
-
-    <aside class="sidebar">
-      <div class="betslip-panel" id="betslipPanel">
-        <div class="betslip-header"><h3 class="betslip-title">Bet Slip</h3></div>
-        <div class="betslip-content">
-          <div id="betslipEmpty" class="betslip-empty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            <p>Click on odds to add bets</p>
-          </div>
-          <div id="betslipItems"></div>
-          <div id="betslipSummary" style="display:none">
-            <div class="betslip-summary">
-              <input type="number" class="bet-amount-input" id="betAmount" value="100" min="1" />
-              <div class="bet-amount-presets">
-                <button class="preset-btn" data-amount="50">50</button>
-                <button class="preset-btn" data-amount="100">100</button>
-                <button class="preset-btn" data-amount="200">200</button>
-                <button class="preset-btn" data-amount="500">500</button>
-              </div>
-              <div class="betslip-row"><span class="label">Total Odds</span><span class="value" id="totalOdds">0.00</span></div>
-              <div class="betslip-row"><span class="label">Total Bet</span><span class="value" id="totalBet">100 Coins</span></div>
-              <div class="betslip-row"><span class="label">Potential Win</span><span class="value highlight" id="potentialWin">0 Coins</span></div>
-              <button class="btn-place-bet" id="placeBetBtn">⚽ Place Bet</button>
-            </div>
+      </a>
+      
+      <nav class="nav-menu" data-testid="nav-menu">
+        <a href="../index.html" class="nav-link" data-testid="nav-home">Home</a>
+        <a href="matches.html" class="nav-link active" data-testid="nav-matches">Matches</a>
+        <a href="leaderboard.html" class="nav-link" data-testid="nav-leaderboard">Leaderboard</a>
+        <a href="account.html" class="nav-link" data-testid="nav-account">My Account</a>
+      </nav>
+      
+      <div class="header-right">
+        <div class="coin-balance" data-testid="coin-balance">
+          <img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" alt="coins" class="coin-icon">
+          <div>
+            <span class="coin-amount" data-testid="coin-amount">0</span>
+            <span class="coin-label"> coins</span>
           </div>
         </div>
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=guest" alt="User" class="user-avatar" data-testid="user-avatar" onclick="window.location.href='/account.html'" style="display: none;">
+        <button class="btn btn-secondary" data-testid="auth-btn" onclick="window.location.href='/login.html'" style="padding: 8px 16px;">Login</button>
+        <button class="mobile-menu-btn" data-testid="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
       </div>
-    </aside>
-  </div>
+    </div>
+  </header>
 
-  <div class="toast-container" id="toastContainer"></div>
+  <!-- Main Content -->
+  <main class="container">
+    <div class="main-layout">
+      <!-- Main Content Area -->
+      <div class="main-content">
+        <section class="matches-page" data-testid="matches-page">
+          <div class="section-header">
+            <h1 class="section-title" style="font-size: 2rem;">All Matches</h1>
+          </div>
+          
+          <!-- Filters -->
+          <div class="matches-filters" data-testid="matches-filters">
+            <button class="filter-btn active" data-testid="filter-all" onclick="filterMatches('all', this)">All Matches</button>
+            <button class="filter-btn" data-testid="filter-live" onclick="filterMatches('live', this)">Live Now</button>
+            <button class="filter-btn" data-testid="filter-upcoming" onclick="filterMatches('upcoming', this)">Upcoming</button>
+          </div>
+          
+          <!-- Matches List -->
+          <div id="matches-list" class="matches-list" data-testid="matches-list">
+            <!-- Rendered by JS -->
+            <div class="loading"><div class="loading-spinner"></div></div>
+          </div>
+        </section>
+      </div>
 
-  <script src="js/api.js"></script>
-  <script src="js/betslip.js"></script>
-  <script src="js/matches.js"></script>
-  <script src="js/main.js"></script>
+      <!-- Sidebar -->
+      <aside class="sidebar" data-testid="sidebar">
+        <!-- Bet Slip -->
+        <div class="betslip" data-testid="betslip">
+          <div class="betslip-header">
+            <span class="betslip-title">Bet Slip</span>
+            <a href="account.html" class="betslip-link" data-testid="my-bets-link">My Bets →</a>
+          </div>
+          <div class="betslip-content" data-testid="betslip-content">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Mini Leaderboard -->
+        <div id="leaderboard-mini" data-testid="leaderboard-mini-container">
+          <!-- Rendered by JS -->
+        </div>
+      </aside>
+
+      <!-- Sidebar Overlay (mobile) -->
+      <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    </div>
+  </main>
+
+  <!-- Mobile Bet Slip Toggle -->
+  <button class="btn btn-primary" data-testid="mobile-betslip-btn" onclick="toggleSidebar()" style="position: fixed; bottom: 20px; right: 20px; z-index: 97; display: none; border-radius: 50%; width: 60px; height: 60px; padding: 0;">
+    🎫
+  </button>
+
+  <!-- Scripts -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/betslip.js"></script>
+  <script src="../js/matches.js"></script>
+  <script src="../js/main.js"></script>
+  
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      await Matches.renderFullPage('all');
-      BetSlip.init();
+    // Filter matches
+    function filterMatches(filter, btn) {
+      // Update active state
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Render filtered matches
+      Matches.renderMatchList('matches-list', filter);
+    }
 
-      document.getElementById('filterBar').addEventListener('click', (e) => {
-        const btn = e.target.closest('.filter-btn');
-        if (!btn) return;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        Matches.renderFullPage(btn.dataset.filter);
-      });
+    // Page-specific initialization
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Render all matches
+      await Matches.renderMatchList('matches-list');
+      
+      // Render mini leaderboard
+      await Leaderboard.renderMini('leaderboard-mini');
+      
+      // Show mobile bet slip button on smaller screens
+      const mediaQuery = window.matchMedia('(max-width: 1024px)');
+      const mobileBetslipBtn = document.querySelector('[data-testid="mobile-betslip-btn"]');
+      if (mobileBetslipBtn) {
+        mobileBetslipBtn.style.display = mediaQuery.matches ? 'flex' : 'none';
+        mediaQuery.addEventListener('change', (e) => {
+          mobileBetslipBtn.style.display = e.matches ? 'flex' : 'none';
+        });
+      }
     });
   </script>
 </body>
 </html>
+

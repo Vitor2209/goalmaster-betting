@@ -1,66 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leaderboard — GoalMaster</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GoalMaster - Leaderboard">
+  <title>Leaderboard - GoalMaster</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@400;500;600&family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="../css/styles.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 </head>
 <body>
-
-  <nav class="navbar">
-    <div class="navbar-brand">
-      <img src="assets/logo.png" alt="GoalMaster" />
-      <div><h1>GoalMaster</h1><span>Bet. Play. Win.</span></div>
-    </div>
-    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
-    <div class="navbar-menu" id="navMenu">
-      <a href="index.html">Home</a>
-      <a href="matches.html">Matches</a>
-      <a href="leaderboard.html" class="active">Leaderboard</a>
-      <a href="account.html">My Account</a>
-    </div>
-    <div class="navbar-right">
-      <div class="coin-balance"><div class="coin-icon">$</div><span id="coinAmount" class="coin-amount">1,250</span><span style="color:var(--text-muted);font-size:0.75rem">COINS</span></div>
-      <div class="user-avatar" id="userAvatar">P</div>
-    </div>
-  </nav>
-
-  <div class="page-container">
-    <div class="page-header">
-      <h1 class="page-title">🏆 Leaderboard</h1>
-    </div>
-
-    <div class="leaderboard-full" id="leaderboardFull">
-      <div class="loading-spinner"><div class="spinner"></div></div>
-    </div>
-  </div>
-
-  <div class="toast-container" id="toastContainer"></div>
-
-  <script src="js/api.js"></script>
-  <script src="js/main.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const lb = await GmAPI.getLeaderboard();
-      const container = document.getElementById('leaderboardFull');
-      if (!container || !lb) return;
-
-      const rankClass = (i) => ['gold','silver','bronze'][i] || 'default';
-
-      container.innerHTML = lb.map((u, i) => `
-        <div class="leaderboard-full-item">
-          <div class="lb-rank ${rankClass(i)}">${i + 1}</div>
-          <div class="lb-avatar">${u.username.charAt(0).toUpperCase()}</div>
-          <div class="lb-info">
-            <div class="lb-name">${u.username}</div>
-            <div class="lb-stats">Active bettor</div>
-          </div>
-          <span class="lb-coins">${u.coins.toLocaleString()} <span style="font-size:0.7rem;color:var(--text-muted)">Coins</span></span>
+  <!-- Header -->
+  <header class="header" data-testid="header">
+    <div class="header-container">
+      <a href="../index.html" class="logo" data-testid="logo">
+        <div class="logo-icon">⚽</div>
+        <div>
+          <div class="logo-text">GoalMaster</div>
+          <div class="logo-tagline">Bet. Play. Win.</div>
         </div>
-      `).join('');
+      </a>
+      
+      <nav class="nav-menu" data-testid="nav-menu">
+        <a href="../index.html" class="nav-link" data-testid="nav-home">Home</a>
+        <a href="matches.html" class="nav-link" data-testid="nav-matches">Matches</a>
+        <a href="leaderboard.html" class="nav-link active" data-testid="nav-leaderboard">Leaderboard</a>
+        <a href="account.html" class="nav-link" data-testid="nav-account">My Account</a>
+      </nav>
+      
+      <div class="header-right">
+        <div class="coin-balance" data-testid="coin-balance">
+          <img src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" alt="coins" class="coin-icon">
+          <div>
+            <span class="coin-amount" data-testid="coin-amount">0</span>
+            <span class="coin-label"> coins</span>
+          </div>
+        </div>
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=guest" alt="User" class="user-avatar" data-testid="user-avatar" onclick="window.location.href='/account.html'" style="display: none;">
+        <button class="btn btn-secondary" data-testid="auth-btn" onclick="window.location.href='/login.html'" style="padding: 8px 16px;">Login</button>
+        <button class="mobile-menu-btn" data-testid="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <div class="leaderboard-page" data-testid="leaderboard-page">
+      <div class="section-header">
+        <h1 class="section-title" style="font-size: 2rem;">Top Players</h1>
+      </div>
+      
+      <div id="leaderboard-full" data-testid="leaderboard-full">
+        <!-- Rendered by JS -->
+        <div class="loading"><div class="loading-spinner"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="../js/api.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/betslip.js"></script>
+  <script src="../js/matches.js"></script>
+  <script src="../js/main.js"></script>
+  
+  <script>
+    // Page-specific initialization
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Render full leaderboard
+      await Leaderboard.renderFull('leaderboard-full');
     });
   </script>
 </body>
